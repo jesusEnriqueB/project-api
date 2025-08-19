@@ -6,7 +6,7 @@ Este proyecto es el backend de un gestor de proyectos desarrollado en Laravel 10
 
 - PHP 8.1+
 - Composer
-- SQLite (o MySQL si lo configuras)
+- MySQL
 
 ## Instalación
 
