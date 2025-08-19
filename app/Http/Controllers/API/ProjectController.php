@@ -44,7 +44,7 @@ class ProjectController extends Controller
      */
     public function show(string $id)
     {
-        $project = Project::findOrFail($id); // Busca el proyecto por ID o lanza 404
+        $project = Project::findOrFail($id);
         return response()->json($project);
     }
 

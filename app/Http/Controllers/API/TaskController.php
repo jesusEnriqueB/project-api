@@ -36,15 +36,17 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'=>'required|string|max:255',
-            'description'=>'nullable|string',
-            'project_id'=>'required|exists:projects,id',
-            'user_id'=>'nullable|exists:users,id',
-            'status'=>'nullable|in:pending,in_progress,completed',
-            'percentage'=>'nullable|integer|min:0|max:100'
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'project_id' => 'required|exists:projects,id',
+            'user_id' => 'nullable|exists:users,id',
+            'status' => 'nullable|in:pending,in_progress,completed',
+            'percentage' => 'nullable|integer|min:0|max:100'
         ]);
 
         $task = Task::create($validated);
+
+        $this->updateProjectProgress($task->project_id);
 
         return response()->json($task, 201);
     }
@@ -54,7 +56,7 @@ class TaskController extends Controller
      */
     public function show(string $id)
     {
-        $task = Task::findOrFail($id); // Busca la tarea por ID
+        $task = Task::findOrFail($id);
         return response()->json($task);
     }
 
@@ -75,6 +77,8 @@ class TaskController extends Controller
 
         $task->update($validated);
 
+        $this->updateProjectProgress($task->project_id);
+
         return response()->json($task);
     }
 
@@ -84,8 +88,23 @@ class TaskController extends Controller
     public function destroy(string $id)
     {
         $task = Task::findOrFail($id);
+        $projectId = $task->project_id;
         $task->delete();
 
+        $this->updateProjectProgress($projectId);
+
         return response()->json(['message' => 'Task deleted successfully']);
+    }
+
+    private function updateProjectProgress($projectId)
+    {
+        $project = \App\Models\Project::find($projectId);
+        if (!$project) return;
+
+        $totalTasks = $project->tasks()->count();
+        $completedTasks = $project->tasks()->where('status', 'completed')->count();
+
+        $project->progress = $totalTasks ? round(($completedTasks / $totalTasks) * 100) : 0;
+        $project->save();
     }
 }
