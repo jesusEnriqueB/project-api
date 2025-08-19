@@ -15,7 +15,7 @@ class ProjectController extends Controller
     {
         $user = $request->user();
 
-        $projects = $user->role === 'admin' ? Project::all() : $user->projects;
+        $projects = $user->role === 'admin' ? Project::with('tasks')->get() : $user->projects()->with('tasks')->get();
 
         return response()->json($projects);
     }
@@ -44,7 +44,7 @@ class ProjectController extends Controller
      */
     public function show(string $id)
     {
-        $project = Project::findOrFail($id);
+        $project = Project::with('tasks')->findOrFail($id);
         return response()->json($project);
     }
 
@@ -71,9 +71,12 @@ class ProjectController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = request()->user();
         $project = Project::findOrFail($id);
+        if ($user->role !== 'admin' && $project->user_id !== $user->id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         $project->delete();
-    
         return response()->json(['message' => 'Project deleted successfully']);
     }
 }

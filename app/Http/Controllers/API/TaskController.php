@@ -87,12 +87,14 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = request()->user();
         $task = Task::findOrFail($id);
+        if ($user->role !== 'admin' && $task->user_id !== $user->id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         $projectId = $task->project_id;
         $task->delete();
-
         $this->updateProjectProgress($projectId);
-
         return response()->json(['message' => 'Task deleted successfully']);
     }
 

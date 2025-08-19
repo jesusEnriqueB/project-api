@@ -62,4 +62,12 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
+    public function users(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+        return response()->json(\App\Models\User::all());
+    }
 }
